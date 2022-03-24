@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.football.dto.BaseStatsDto;
 import com.football.dto.ScoreDto;
 import com.football.resultsms.service.StatisticsService;
 
@@ -26,6 +27,11 @@ public Mono<Integer> handleGetScore(@PathVariable String team) {
 @GetMapping("/score")
 public Flux<ScoreDto> handleGetAllScore() {
     return statisticsService.allTeamScore();
-}	
+}
+
+@GetMapping("/goals/{team}")
+public Mono<BaseStatsDto> handleGalculateGoalsDiff(@PathVariable String team) {
+	return statisticsService.calculateGoalsDiff(team);
+}
 }
 

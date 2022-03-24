@@ -1,8 +1,13 @@
 package com.football.resultsms.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.football.dto.BaseStatsDto;
 import com.football.dto.ScoreDto;
 import com.football.resultsms.repository.MatchesRepository;
 import com.football.resultsms.repository.TeamsRepository;
@@ -46,4 +51,20 @@ public class StatisticsService {
 		}).sort((a, b) -> b.getScore() - a.getScore());
 	}
 
+	public Mono<BaseStatsDto> calculateGoalsDiff(String team) {
+		return Mono.zip(matchesRepository.findByHomeTeam(team).collectList(), matchesRepository.findByAwayTeam(team).collectList())
+			.map(e -> {
+				List<BaseStatsDto> homeStats = e.getT1()
+						.stream()
+						.map(m -> new BaseStatsDto(m.getHomeScore(), m.getAwayScore())).collect(Collectors.toList());
+				List<BaseStatsDto> awayStats = e.getT2()
+						.stream()
+						.map(m -> new BaseStatsDto(m.getAwayScore(), m.getHomeScore())).collect(Collectors.toList());
+				
+				return Stream.concat(homeStats.stream(), awayStats.stream())
+					.reduce(new BaseStatsDto(0,0), (subtotal, element) -> new BaseStatsDto(
+							subtotal.getGoalsScored()+element.getGoalsScored(), 
+							subtotal.getGoalsTook()+element.getGoalsTook() ));
+			});
+	}
 }
